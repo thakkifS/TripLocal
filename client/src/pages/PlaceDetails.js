@@ -5,6 +5,7 @@ import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { API_URL } from '../config';
 
 // Fix for default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -23,7 +24,7 @@ const PlaceDetails = () => {
 
   const fetchPlaceDetails = useCallback(async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/places/${id}`);
+      const response = await axios.get(`${API_URL}/places/${id}`);
       setPlace(response.data);
     } catch (error) {
       console.error('Error fetching place details:', error);
@@ -46,7 +47,7 @@ const PlaceDetails = () => {
     setAddingToPlan(true);
     try {
       await axios.post(
-        `${process.env.REACT_APP_API_URL}/dayplan/add`,
+        `${API_URL}/dayplan/add`,
         { placeId: id },
         {
           headers: { Authorization: `Bearer ${token}` }

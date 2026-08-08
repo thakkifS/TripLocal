@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../../config';
 import { ArrowLeft, Upload } from 'lucide-react';
 
 const AddPlace = () => {
@@ -80,7 +81,7 @@ const AddPlace = () => {
         formDataToSend.append('images', image);
       });
 
-      await axios.post(`${process.env.REACT_APP_API_URL}/places`, formDataToSend, {
+      await axios.post(`${API_URL}/places`, formDataToSend, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'

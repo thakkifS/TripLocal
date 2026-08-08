@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Edit, Trash2, Search, Plus } from 'lucide-react';
 import axios from 'axios';
+import { API_URL } from '../../config';
 
 const ManagePlaces = () => {
   const [places, setPlaces] = useState([]);
@@ -15,7 +16,7 @@ const ManagePlaces = () => {
   const fetchPlaces = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/places`, {
+      const response = await axios.get(`${API_URL}/places`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPlaces(response.data);
@@ -33,7 +34,7 @@ const ManagePlaces = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.REACT_APP_API_URL}/places/${id}`, {
+      await axios.delete(`${API_URL}/places/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPlaces(places.filter(p => p._id !== id));

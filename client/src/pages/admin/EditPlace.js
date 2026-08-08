@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowLeft, Upload, Trash2 } from 'lucide-react';
+import { API_URL } from '../../config';
 
 const EditPlace = () => {
   const { id } = useParams();
@@ -36,7 +37,7 @@ const EditPlace = () => {
   const fetchPlaceDetails = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/places/${id}`, {
+      const response = await axios.get(`${API_URL}/places/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -123,7 +124,7 @@ const EditPlace = () => {
         formDataToSend.append('images', image);
       });
 
-      await axios.put(`${process.env.REACT_APP_API_URL}/places/${id}`, formDataToSend, {
+      await axios.put(`${API_URL}/places/${id}`, formDataToSend, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'

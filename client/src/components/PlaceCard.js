@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MapPin, Clock3, ArrowUpRight, Plus, Image as ImageIcon } from 'lucide-react';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const PlaceCard = ({ place, showAdd = true }) => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const PlaceCard = ({ place, showAdd = true }) => {
     const token = localStorage.getItem('token');
     if (!token) return navigate('/login');
     setAdding(true);
-    try { await axios.post(`${process.env.REACT_APP_API_URL}/dayplan/add`, { placeId: place._id }, { headers: { Authorization: `Bearer ${token}` } }); }
+    try { await axios.post(`${API_URL}/dayplan/add`, { placeId: place._id }, { headers: { Authorization: `Bearer ${token}` } }); }
     catch (error) { if (error.response?.status !== 400) console.error(error); }
     finally { setAdding(false); }
   };

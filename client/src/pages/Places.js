@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { MapPin, Search, Filter } from 'lucide-react';
 import axios from 'axios';
 import PlaceCard from '../components/PlaceCard';
+import { API_URL } from '../config';
 
 const Places = () => {
   const [searchParams] = useSearchParams();
@@ -25,7 +26,7 @@ const Places = () => {
       if (filters.category !== 'All') params.category = filters.category;
       if (filters.distance) params.distance = filters.distance;
 
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/places`, { params });
+      const response = await axios.get(`${API_URL}/places`, { params });
       setPlaces(response.data);
     } catch (error) {
       console.error('Error fetching places:', error);

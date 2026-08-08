@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Clock, Trash2, Coffee, ArrowDown, Save, XCircle } from 'lucide-react';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const DayPlanner = () => {
   const [dayPlan, setDayPlan] = useState(null);
@@ -38,7 +39,7 @@ const DayPlanner = () => {
   const fetchDayPlan = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/dayplan`, {
+      const response = await axios.get(`${API_URL}/dayplan`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDayPlan(response.data);
@@ -57,7 +58,7 @@ const DayPlanner = () => {
   const removeFromPlan = async (placeId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.REACT_APP_API_URL}/dayplan/remove/${placeId}`, {
+      await axios.delete(`${API_URL}/dayplan/remove/${placeId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await fetchDayPlan();
@@ -74,7 +75,7 @@ const DayPlanner = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.REACT_APP_API_URL}/dayplan/clear`, {
+      await axios.delete(`${API_URL}/dayplan/clear`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDayPlan(null);

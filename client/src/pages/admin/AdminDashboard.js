@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, LayoutDashboard, Plus, Edit, Trash2 } from 'lucide-react';
 import axios from 'axios';
+import { API_URL } from '../../config';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -18,7 +19,7 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const placesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/places`, {
+      const placesResponse = await axios.get(`${API_URL}/places`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -45,7 +46,7 @@ const AdminDashboard = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.REACT_APP_API_URL}/places/${id}`, {
+      await axios.delete(`${API_URL}/places/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await fetchDashboardData();

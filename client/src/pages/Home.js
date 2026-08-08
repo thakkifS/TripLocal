@@ -7,6 +7,7 @@ import heroIsland from '../images/image1.jpeg';
 import travelSigns from '../images/image2.jpeg';
 import worldTraveller from '../images/image3.jpeg';
 import sriLankaTravel from '../images/image4.jpeg';
+import { API_URL } from '../config';
 
 const categories = [['Religious', Church], ['Nature', TreePine], ['Heritage', Landmark], ['Cultural', Drama]];
 const heroSlides = [
@@ -17,7 +18,7 @@ const heroSlides = [
 ];
 const Home = () => {
   const [places, setPlaces] = useState([]); const [query, setQuery] = useState(''); const [slide, setSlide] = useState(() => Math.floor(Math.random() * heroSlides.length)); const navigate = useNavigate();
-  useEffect(() => { axios.get(`${process.env.REACT_APP_API_URL}/places`).then(r => setPlaces(r.data.slice(0,3))).catch(() => {}); }, []);
+  useEffect(() => { axios.get(`${API_URL}/places`).then(r => setPlaces(r.data.slice(0,3))).catch(() => {}); }, []);
   useEffect(() => { const timer = window.setInterval(() => setSlide(current => (current + 1) % heroSlides.length), 5000); return () => window.clearInterval(timer); }, []);
   const search = e => { e.preventDefault(); navigate(`/places${query.trim() ? `?search=${encodeURIComponent(query)}` : ''}`); };
   return <main className="flex-1">
