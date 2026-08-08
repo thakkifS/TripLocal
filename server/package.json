@@ -1,0 +1,39 @@
+{
+  "name": "triplocal-server",
+  "version": "1.0.0",
+  "description": "TripLocal backend server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "add:sainthamaruthu": "node addSainthamaruthuBeach.js",
+    "add:grand-mosque": "node addGrandMosqueSainthamaruthu.js",
+    "add:subdraramaya": "node addSriSubdraramayaTemple.js",
+    "add:south-eastern-university": "node addSouthEasternUniversity.js",
+    "add:oluvil-lighthouse": "node addOluvilLighthouse.js",
+    "add:chadayanthalava": "node addChadayanthalava.js",
+    "add:painthaaru": "node addPainthaaru.js",
+    "add:oluvil-harbour": "node addOluvilHarbour.js",
+    "add:maruthamunai-beach": "node addMaruthamunaiBeach.js",
+    "add:kadatkarai-palli": "node addKadatkaraiPalli.js",
+    "add:deegawapi": "node addDeegawapiRajaMahaVihara.js",
+    "add:elephant-park": "node addElephantParkKaliodai.js",
+    "remove:out-of-range-demo": "node removeOutOfRangeDemoPlaces.js",
+    "provision:admin": "node provisionAdmin.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.0.3",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-[#f7f8f3] text-[#17352a] antialiased;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  h1, h2, h3 { letter-spacing: -0.025em; }
+  ::selection { @apply bg-secondary-200 text-primary-900; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-5 rounded-full transition-all duration-200 shadow-sm hover:shadow-md;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary-400 hover:bg-secondary-500 text-primary-900 font-semibold py-3 px-5 rounded-full transition-all duration-200;
+  }
+  
+  .btn-outline {
+    @apply border border-primary-600 text-primary-700 hover:bg-primary-600 hover:text-white font-semibold py-3 px-5 rounded-full transition-colors duration-200;
+  }
+  
+  .card {
+    @apply bg-white rounded-3xl border border-primary-900/10 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-primary-900/15 bg-white rounded-xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all;
+  }
+  .section-shell { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+  .eyebrow { @apply text-xs font-bold uppercase tracking-[0.22em] text-primary-600; }
+  .image-placeholder { @apply bg-gradient-to-br from-primary-100 via-[#e8efe4] to-secondary-100 relative overflow-hidden; }
+}
