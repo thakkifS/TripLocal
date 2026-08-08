@@ -7,7 +7,11 @@ const Place = require('../models/Place');
 const { auth, adminAuth } = require('../middleware/auth');
 
 // Configure multer for image uploads
-const uploadsDirectory = path.join(__dirname, '..', 'uploads');
+// Vercel functions have a read-only application filesystem. Only /tmp is
+// writable at runtime, so use it for temporary uploads in production.
+const uploadsDirectory = process.env.VERCEL
+  ? path.join('/tmp', 'triplocal-uploads')
+  : path.join(__dirname, '..', 'uploads');
 fs.mkdirSync(uploadsDirectory, { recursive: true });
 
 const storage = multer.diskStorage({
