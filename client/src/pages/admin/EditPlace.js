@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowLeft, Upload, Trash2 } from 'lucide-react';
@@ -33,11 +33,7 @@ const EditPlace = () => {
 
   const categories = ['Religious', 'Nature', 'Heritage', 'Cultural', 'Historical', 'Adventure'];
 
-  useEffect(() => {
-    fetchPlaceDetails();
-  }, [id]);
-
-  const fetchPlaceDetails = async () => {
+  const fetchPlaceDetails = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/places/${id}`, {
@@ -45,7 +41,7 @@ const EditPlace = () => {
       });
       
       const place = response.data;
-      setFormData({
+      setFormData((current) => ({
         name: place.name,
         description: place.description,
         category: place.category,
@@ -54,9 +50,9 @@ const EditPlace = () => {
         longitude: place.location.longitude,
         distanceFromHome: place.distanceFromHome,
         estimatedVisitDuration: place.estimatedVisitDuration,
-        openingHours: place.openingHours || formData.openingHours,
+        openingHours: place.openingHours || current.openingHours,
         travelTips: place.travelTips || ['']
-      });
+      }));
       setExistingImages(place.images || []);
     } catch (error) {
       console.error('Error fetching place details:', error);
@@ -65,7 +61,11 @@ const EditPlace = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    fetchPlaceDetails();
+  }, [fetchPlaceDetails]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

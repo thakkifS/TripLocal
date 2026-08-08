@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MapPin, Search, Filter } from 'lucide-react';
 import axios from 'axios';
@@ -17,11 +17,7 @@ const Places = () => {
   const categories = ['All', 'Religious', 'Nature', 'Heritage', 'Cultural', 'Historical', 'Adventure'];
   const distanceRanges = ['0 - 5', '5 - 10', '10 - 15', '15 - 20', '20 - 25'];
 
-  useEffect(() => {
-    fetchPlaces();
-  }, [filters]);
-
-  const fetchPlaces = async () => {
+  const fetchPlaces = useCallback(async () => {
     setLoading(true);
     try {
       const params = {};
@@ -36,7 +32,11 @@ const Places = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    fetchPlaces();
+  }, [fetchPlaces]);
 
   const handleSearch = (e) => {
     setFilters({ ...filters, search: e.target.value });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, Plus, ArrowLeft, Navigation } from 'lucide-react';
 import axios from 'axios';
@@ -21,11 +21,7 @@ const PlaceDetails = () => {
   const [loading, setLoading] = useState(true);
   const [addingToPlan, setAddingToPlan] = useState(false);
 
-  useEffect(() => {
-    fetchPlaceDetails();
-  }, [id]);
-
-  const fetchPlaceDetails = async () => {
+  const fetchPlaceDetails = useCallback(async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/places/${id}`);
       setPlace(response.data);
@@ -34,7 +30,11 @@ const PlaceDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchPlaceDetails();
+  }, [fetchPlaceDetails]);
 
   const addToDayPlan = async () => {
     const token = localStorage.getItem('token');

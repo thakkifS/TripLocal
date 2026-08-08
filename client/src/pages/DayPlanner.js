@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Clock, Trash2, Coffee, ArrowDown, Save, XCircle } from 'lucide-react';
 import axios from 'axios';
@@ -9,26 +9,7 @@ const DayPlanner = () => {
   const [totalDistance, setTotalDistance] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
 
-  useEffect(() => {
-    fetchDayPlan();
-  }, []);
-
-  const fetchDayPlan = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/dayplan`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setDayPlan(response.data);
-      calculateTotals(response.data);
-    } catch (error) {
-      console.error('Error fetching day plan:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const calculateTotals = (plan) => {
+  const calculateTotals = useCallback((plan) => {
     if (!plan || !plan.places || plan.places.length === 0) {
       setTotalDistance(0);
       setTotalTime(0);
@@ -52,7 +33,26 @@ const DayPlanner = () => {
 
     setTotalDistance(distance);
     setTotalTime(time);
-  };
+  }, []);
+
+  const fetchDayPlan = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/dayplan`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDayPlan(response.data);
+      calculateTotals(response.data);
+    } catch (error) {
+      console.error('Error fetching day plan:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [calculateTotals]);
+
+  useEffect(() => {
+    fetchDayPlan();
+  }, [fetchDayPlan]);
 
   const removeFromPlan = async (placeId) => {
     try {
