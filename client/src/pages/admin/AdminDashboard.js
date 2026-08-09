@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, LayoutDashboard, Plus, Edit, Trash2 } from 'lucide-react';
+import { MapPin, LayoutDashboard, Plus, Edit, Trash2, MessageSquare } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../../config';
 
@@ -102,7 +102,7 @@ const AdminDashboard = () => {
         {/* Quick Actions */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link
               to="/admin/places/add"
               className="flex items-center p-4 bg-primary-50 hover:bg-primary-100 rounded-xl transition-colors"
@@ -126,6 +126,19 @@ const AdminDashboard = () => {
               <div>
                 <h3 className="font-bold text-gray-900">Manage Places</h3>
                 <p className="text-gray-600 text-sm">View and edit all places</p>
+              </div>
+            </Link>
+
+            <Link
+              to="/admin/reviews"
+              className="flex items-center p-4 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors"
+            >
+              <div className="w-12 h-12 bg-amber-500 rounded-lg flex items-center justify-center mr-4">
+                <MessageSquare className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Review Approvals</h3>
+                <p className="text-gray-600 text-sm">Approve tourist reviews</p>
               </div>
             </Link>
           </div>

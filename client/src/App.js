@@ -13,6 +13,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import ManagePlaces from './pages/admin/ManagePlaces';
 import AddPlace from './pages/admin/AddPlace';
 import EditPlace from './pages/admin/EditPlace';
+import ManageReviews from './pages/admin/ManageReviews';
 import About from './pages/About';
 import Categories from './pages/Categories';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -37,6 +38,7 @@ function App() {
             <Route path="/admin/places" element={<AdminRoute><ManagePlaces /></AdminRoute>} />
             <Route path="/admin/places/add" element={<AdminRoute><AddPlace /></AdminRoute>} />
             <Route path="/admin/places/edit/:id" element={<AdminRoute><EditPlace /></AdminRoute>} />
+            <Route path="/admin/reviews" element={<AdminRoute><ManageReviews /></AdminRoute>} />
           </Routes>
           <Footer />
         </div>

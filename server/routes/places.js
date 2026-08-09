@@ -4,8 +4,10 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const Place = require('../models/Place');
+const Review = require('../models/Review');
 const { auth, adminAuth } = require('../middleware/auth');
 const { extractCoordinates, isValidCoordinate, validateMapUrl } = require('../utils/location');
+const { calculateRoadDistance, HOME_LOCATION } = require('../services/roadDistance');
 
 // Configure multer for image uploads
 // Vercel functions have a read-only application filesystem. Only /tmp is
@@ -70,9 +72,22 @@ const normalizePlaceBody = (body) => {
 
 const sendWriteError = (res, error) => {
   const validationError = error.name === 'ValidationError' || /^(Location|Latitude|Distance|Visit duration)/.test(error.message);
-  return res.status(validationError ? 400 : 500).json({
-    message: validationError ? error.message : 'Server error'
+  const validationMessage = error.name === 'ValidationError'
+    ? Object.values(error.errors)[0]?.message || 'Place details are invalid'
+    : error.message;
+  return res.status(error.statusCode || (validationError ? 400 : 500)).json({
+    message: validationError || error.statusCode ? validationMessage : 'Server error'
   });
+};
+
+const calculateAndSetDistance = async (data) => {
+  if (!data.location) return data;
+  const route = await calculateRoadDistance(data.location);
+  if (route.distanceKm > 25) {
+    throw new Error('Distance by road must be within 25 km of New Mosque Road');
+  }
+  data.distanceFromHome = route.distanceKm;
+  return data;
 };
 
 const upload = multer({ 
@@ -89,6 +104,13 @@ const upload = multer({
     cb(new Error('Images only!'));
   }
 });
+
+const handleUploads = (req, res, next) => {
+  upload.array('images', 5)(req, res, (error) => {
+    if (error) return res.status(400).json({ message: error.message });
+    next();
+  });
+};
 
 // Get all places
 router.get('/', async (req, res) => {
@@ -127,6 +149,23 @@ router.get('/categories/list', async (req, res) => {
   }
 });
 
+// Calculate driving distance from the application's fixed home location.
+router.post('/calculate-distance', adminAuth, async (req, res) => {
+  try {
+    const destination = {
+      latitude: Number(req.body.latitude),
+      longitude: Number(req.body.longitude)
+    };
+    if (!isValidCoordinate(destination.latitude, destination.longitude)) {
+      return res.status(400).json({ message: 'Valid destination coordinates are required' });
+    }
+    const route = await calculateRoadDistance(destination);
+    res.json({ ...route, origin: HOME_LOCATION });
+  } catch (error) {
+    sendWriteError(res, error);
+  }
+});
+
 // Get single place
 router.get('/:id', async (req, res) => {
   try {
@@ -141,12 +180,13 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create place (admin only)
-router.post('/', adminAuth, upload.array('images', 5), async (req, res) => {
+router.post('/', adminAuth, handleUploads, async (req, res) => {
   try {
     const imagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
     
+    const placeData = await calculateAndSetDistance(normalizePlaceBody(req.body));
     const place = new Place({
-      ...normalizePlaceBody(req.body),
+      ...placeData,
       images: imagePaths
     });
     
@@ -158,14 +198,14 @@ router.post('/', adminAuth, upload.array('images', 5), async (req, res) => {
 });
 
 // Update place (admin only)
-router.put('/:id', adminAuth, upload.array('images', 5), async (req, res) => {
+router.put('/:id', adminAuth, handleUploads, async (req, res) => {
   try {
     const place = await Place.findById(req.params.id);
     if (!place) {
       return res.status(404).json({ message: 'Place not found' });
     }
     
-    const updates = normalizePlaceBody(req.body);
+    const updates = await calculateAndSetDistance(normalizePlaceBody(req.body));
     let retainedImages = place.images;
     if (req.body.existingImages) {
       try { retainedImages = JSON.parse(req.body.existingImages); } catch (_) { retainedImages = place.images; }
@@ -191,6 +231,7 @@ router.delete('/:id', adminAuth, async (req, res) => {
     }
     
     await Place.findByIdAndDelete(req.params.id);
+    await Review.deleteMany({ place: req.params.id });
     res.json({ message: 'Place deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

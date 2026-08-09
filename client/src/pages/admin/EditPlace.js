@@ -4,12 +4,14 @@ import axios from 'axios';
 import { ArrowLeft, Upload, Trash2 } from 'lucide-react';
 import { API_URL } from '../../config';
 import { extractCoordinates, validateMapUrl } from '../../utils/location';
+import { validatePlaceForm } from '../../utils/placeValidation';
 
 const EditPlace = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [calculatingDistance, setCalculatingDistance] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -95,18 +97,32 @@ const EditPlace = () => {
     setImages(e.target.files);
   };
 
-  const calculateCoordinates = () => {
+  const calculateCoordinates = async () => {
     if (!validateMapUrl(formData.locationUrl)) {
       alert('Enter a valid HTTPS Google Maps or OpenStreetMap link.');
-      return false;
+      return;
     }
     const coordinates = extractCoordinates(formData.locationUrl);
     if (!coordinates) {
       alert('This link does not contain coordinates. In Google Maps, copy the full browser URL containing @latitude,longitude.');
-      return false;
+      return;
     }
-    setFormData((current) => ({ ...current, ...coordinates }));
-    return true;
+    setCalculatingDistance(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_URL}/places/calculate-distance`, coordinates, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFormData((current) => ({
+        ...current,
+        ...coordinates,
+        distanceFromHome: response.data.distanceKm
+      }));
+    } catch (error) {
+      alert(error.response?.data?.message || 'Unable to calculate the road distance.');
+    } finally {
+      setCalculatingDistance(false);
+    }
   };
 
   const removeExistingImage = (index) => {
@@ -115,8 +131,9 @@ const EditPlace = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.locationUrl && !validateMapUrl(formData.locationUrl)) {
-      alert('Enter a valid HTTPS Google Maps or OpenStreetMap link.');
+    const validationError = validatePlaceForm(formData, images, existingImages.length);
+    if (validationError) {
+      alert(validationError);
       return;
     }
     setSaving(true);
@@ -184,7 +201,7 @@ const EditPlace = () => {
           <p className="text-gray-600">Update attraction information</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8">
+        <form onSubmit={handleSubmit} noValidate className="bg-white rounded-2xl shadow-lg p-8">
           {/* Basic Information */}
           <div className="mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Basic Information</h2>
@@ -255,11 +272,11 @@ const EditPlace = () => {
                   className="input-field"
                   placeholder="https://www.google.com/maps/place/.../@7.29,81.67,15z"
                 />
-                <button type="button" onClick={calculateCoordinates} className="btn-outline whitespace-nowrap">
-                  Calculate coordinates
+                <button type="button" disabled={calculatingDistance} onClick={calculateCoordinates} className="btn-outline whitespace-nowrap disabled:opacity-60">
+                  {calculatingDistance ? 'Calculating...' : 'Calculate location'}
                 </button>
               </div>
-              <p className="mt-2 text-xs text-gray-500">Use a full map URL. Coordinates below are filled automatically when the link contains them.</p>
+              <p className="mt-2 text-xs text-gray-500">Calculates coordinates and driving distance from New Mosque Road, Sainthamaruthu.</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -310,8 +327,10 @@ const EditPlace = () => {
                   required
                   min="0"
                   max="25"
+                  readOnly
                   className="input-field"
                 />
+                <p className="mt-2 text-xs text-gray-500">Calculated from the fastest available driving route.</p>
               </div>
             </div>
 

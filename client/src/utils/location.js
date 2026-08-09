@@ -17,6 +17,7 @@ export const extractCoordinates = (value) => {
   if (!validateMapUrl(value)) return null;
   const url = new URL(value);
   const candidates = [
+    value.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/),
     value.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/),
     url.searchParams.get('q')?.match(/^(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)$/),
     url.searchParams.get('query')?.match(/^(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)$/),

@@ -4,11 +4,13 @@ const placeSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    maxlength: 120
   },
   description: {
     type: String,
-    required: true
+    required: true,
+    maxlength: 5000
   },
   category: {
     type: String,
@@ -32,7 +34,9 @@ const placeSchema = new mongoose.Schema({
   }],
   address: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
+    maxlength: 500
   },
   locationUrl: {
     type: String,
