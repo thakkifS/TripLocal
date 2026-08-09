@@ -1,10 +1,26 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const multer = require('multer');
 const Review = require('../models/Review');
 const Place = require('../models/Place');
 const { auth, adminAuth } = require('../middleware/auth');
 
 const router = express.Router();
+const reviewUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 1000000, files: 3 },
+  fileFilter: (req, file, callback) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    callback(allowed.includes(file.mimetype) ? null : new Error('Review photos must be JPG, PNG, or WebP images'), allowed.includes(file.mimetype));
+  }
+});
+
+const handleReviewPhotos = (req, res, next) => {
+  reviewUpload.array('photos', 3)(req, res, (error) => {
+    if (error) return res.status(400).json({ message: error.message });
+    next();
+  });
+};
 
 const reviewMessage = (error) => {
   if (error?.code === 11000) return 'You have already reviewed this place';
@@ -29,7 +45,7 @@ router.get('/place/:placeId', async (req, res) => {
 });
 
 // A tourist can submit one review per place. It is never public before approval.
-router.post('/place/:placeId', auth, async (req, res) => {
+router.post('/place/:placeId', auth, handleReviewPhotos, async (req, res) => {
   try {
     if (req.user.role !== 'tourist') return res.status(403).json({ message: 'Only tourists can submit reviews' });
     if (!mongoose.isValidObjectId(req.params.placeId)) return res.status(400).json({ message: 'Invalid place ID' });
@@ -42,7 +58,8 @@ router.post('/place/:placeId', auth, async (req, res) => {
       return res.status(400).json({ message: 'Review must contain between 10 and 1000 characters' });
     }
     if (!await Place.exists({ _id: req.params.placeId })) return res.status(404).json({ message: 'Place not found' });
-    const review = await Review.create({ place: req.params.placeId, user: req.user._id, rating, comment });
+    const photos = (req.files || []).map((file) => `data:${file.mimetype};base64,${file.buffer.toString('base64')}`);
+    const review = await Review.create({ place: req.params.placeId, user: req.user._id, rating, comment, photos });
     res.status(201).json({ message: 'Review submitted and waiting for administrator approval', review });
   } catch (error) {
     const message = reviewMessage(error);

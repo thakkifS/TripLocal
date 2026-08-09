@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, Plus, ArrowLeft, Navigation, Star, MessageSquare } from 'lucide-react';
+import { MapPin, Clock, Plus, ArrowLeft, Navigation, Star, Camera, X } from 'lucide-react';
 import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -28,6 +28,8 @@ const PlaceDetails = () => {
   const [reviewForm, setReviewForm] = useState({ rating: 0, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewPhotos, setReviewPhotos] = useState([]);
 
   const fetchPlaceDetails = useCallback(async () => {
     try {
@@ -64,13 +66,34 @@ const PlaceDetails = () => {
       alert('Review must contain between 10 and 1000 characters.');
       return;
     }
+    if (reviewPhotos.length > 3) {
+      alert('You can add no more than 3 review photos.');
+      return;
+    }
+    const allowedPhotoTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    for (const photo of reviewPhotos) {
+      if (!allowedPhotoTypes.includes(photo.type)) {
+        alert(`${photo.name} must be a JPG, PNG, or WebP image.`);
+        return;
+      }
+      if (photo.size > 1000000) {
+        alert(`${photo.name} must be 1 MB or smaller.`);
+        return;
+      }
+    }
     setSubmittingReview(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${API_URL}/reviews/place/${id}`, { ...reviewForm, comment }, {
-        headers: { Authorization: `Bearer ${token}` }
+      const reviewData = new FormData();
+      reviewData.append('rating', reviewForm.rating);
+      reviewData.append('comment', comment);
+      reviewPhotos.forEach((photo) => reviewData.append('photos', photo));
+      const response = await axios.post(`${API_URL}/reviews/place/${id}`, reviewData, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       });
       setReviewSubmitted(true);
+      setShowReviewForm(false);
+      setReviewPhotos([]);
       setReviewForm({ rating: 0, comment: '' });
       alert(response.data.message);
     } catch (error) {
@@ -215,21 +238,23 @@ const PlaceDetails = () => {
           )}
 
           {/* Tourist Reviews */}
-          <section className="border-t border-gray-100 px-4 py-8 sm:px-8">
-            <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Tourist Reviews</h2>
-                <p className="mt-1 text-sm text-gray-500">Reviews are published after administrator approval.</p>
-              </div>
-              {reviewSummary.totalReviews > 0 && <div className="flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 font-bold text-amber-800">
+          {(reviews.length > 0 || !isAdmin) && <section className="border-t border-gray-100 px-4 py-8 sm:px-8">
+            {reviewSummary.totalReviews > 0 && <div className="mb-6 flex justify-end">
+              <div className="flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 font-bold text-amber-800">
                 <Star size={19} className="fill-amber-400 text-amber-400" />
                 {reviewSummary.averageRating} <span className="font-normal text-gray-500">({reviewSummary.totalReviews})</span>
-              </div>}
-            </div>
+              </div>
+            </div>}
 
-            {isAuthenticated && !isAdmin && !reviewSubmitted && <form onSubmit={submitReview} noValidate className="mb-8 rounded-2xl border border-primary-900/10 bg-primary-50/60 p-5">
-              <h3 className="font-bold text-gray-900">Review this place</h3>
-              <p className="mt-1 text-sm text-gray-600">Posting as {user?.name}</p>
+            {isAuthenticated && !isAdmin && !reviewSubmitted && !showReviewForm && <button onClick={() => setShowReviewForm(true)} className="btn-outline mb-8 inline-flex items-center gap-2">
+              <Star size={18} /> Write a review
+            </button>}
+
+            {isAuthenticated && !isAdmin && !reviewSubmitted && showReviewForm && <form onSubmit={submitReview} noValidate className="mb-8 rounded-2xl border border-primary-900/10 bg-primary-50/60 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div><h3 className="font-bold text-gray-900">Review this place</h3><p className="mt-1 text-sm text-gray-600">Posting as {user?.name}</p></div>
+                <button type="button" onClick={() => setShowReviewForm(false)} className="rounded-full p-2 text-gray-500 hover:bg-white" aria-label="Close review form"><X size={18} /></button>
+              </div>
               <div className="mt-4 flex gap-1" role="radiogroup" aria-label="Rating">{[1, 2, 3, 4, 5].map((star) => <button
                 key={star}
                 type="button"
@@ -247,6 +272,17 @@ const PlaceDetails = () => {
                 className="input-field mt-4"
                 placeholder="Share your experience (10–1000 characters)"
               />
+              <label className="mt-4 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-primary-900/20 bg-white px-4 py-3 text-sm font-semibold text-primary-700 hover:bg-primary-50">
+                <Camera size={18} /> Add optional photos
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  className="sr-only"
+                  onChange={(event) => setReviewPhotos(Array.from(event.target.files || []).slice(0, 3))}
+                />
+              </label>
+              {reviewPhotos.length > 0 && <p className="mt-2 text-xs text-gray-500">{reviewPhotos.length} photo{reviewPhotos.length > 1 ? 's' : ''} selected · maximum 3 · 1 MB each</p>}
               <div className="mt-3 flex items-center justify-between gap-4">
                 <span className="text-xs text-gray-500">{reviewForm.comment.length}/1000</span>
                 <button disabled={submittingReview} className="btn-primary disabled:opacity-60">{submittingReview ? 'Submitting...' : 'Submit for approval'}</button>
@@ -256,14 +292,15 @@ const PlaceDetails = () => {
             {!isAuthenticated && <button onClick={() => navigate('/login')} className="btn-outline mb-8">Sign in to write a review</button>}
             {reviewSubmitted && <div className="mb-8 rounded-2xl bg-green-50 p-5 text-green-800">Your review is waiting for administrator approval.</div>}
 
-            {reviews.length === 0 ? <div className="rounded-2xl bg-gray-50 p-8 text-center text-gray-500"><MessageSquare className="mx-auto mb-3 text-gray-300" />No approved reviews yet.</div> : <div className="space-y-4">{reviews.map((review) => <article key={review._id} className="rounded-2xl border border-gray-100 p-5">
+            {reviews.length > 0 && <div className="space-y-4">{reviews.map((review) => <article key={review._id} className="rounded-2xl border border-gray-100 p-5">
               <div className="flex items-start justify-between gap-4">
                 <div><h3 className="font-bold text-gray-900">{review.user?.name || 'TripLocal tourist'}</h3><div className="mt-1 flex" aria-label={`${review.rating} out of 5 stars`}>{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={16} className={star <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'} />)}</div></div>
                 <time className="text-xs text-gray-500">{new Date(review.approvedAt || review.createdAt).toLocaleDateString()}</time>
               </div>
               <p className="mt-3 whitespace-pre-wrap text-gray-700">{review.comment}</p>
+              {review.photos?.length > 0 && <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{review.photos.map((photo, index) => <img key={index} src={photo} alt={`Review ${index + 1}`} className="h-32 w-full rounded-xl object-cover" />)}</div>}
             </article>)}</div>}
-          </section>
+          </section>}
 
           {/* Location Map */}
           <div className="px-8 pb-8">

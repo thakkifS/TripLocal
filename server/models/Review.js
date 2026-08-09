@@ -5,6 +5,7 @@ const reviewSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   rating: { type: Number, required: true, min: 1, max: 5 },
   comment: { type: String, required: true, trim: true, minlength: 10, maxlength: 1000 },
+  photos: [{ type: String, maxlength: 1500000 }],
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending', index: true },
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   approvedAt: Date

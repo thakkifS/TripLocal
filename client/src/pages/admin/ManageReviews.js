@@ -61,6 +61,7 @@ const ManageReviews = () => {
           <time className="text-sm text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</time>
         </div>
         <p className="mt-4 whitespace-pre-wrap text-gray-700">{review.comment}</p>
+        {review.photos?.length > 0 && <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{review.photos.map((photo, index) => <img key={index} src={photo} alt={`Review attachment ${index + 1}`} className="h-40 w-full rounded-xl object-cover" />)}</div>}
         <div className="mt-6 flex gap-3">
           <button disabled={processing === review._id} onClick={() => moderate(review._id, 'approve')} className="btn-primary inline-flex items-center gap-2 disabled:opacity-60"><Check size={18} /> Approve</button>
           <button disabled={processing === review._id} onClick={() => moderate(review._id, 'reject')} className="inline-flex items-center gap-2 rounded-full bg-red-100 px-5 py-3 font-semibold text-red-700 hover:bg-red-200 disabled:opacity-60"><X size={18} /> Reject</button>
