@@ -193,6 +193,17 @@ const PlaceDetails = () => {
               <Navigation className="w-4 h-4 mr-2" />
               {place.address}
             </p>
+            {place.locationUrl && (
+              <a
+                href={place.locationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex items-center font-semibold text-primary-700 hover:text-primary-900"
+              >
+                <Navigation className="w-4 h-4 mr-2" />
+                Open location in maps
+              </a>
+            )}
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const Place = require('../models/Place');
 const { auth, adminAuth } = require('../middleware/auth');
+const { extractCoordinates, isValidCoordinate, validateMapUrl } = require('../utils/location');
 
 // Configure multer for image uploads
 // Vercel functions have a read-only application filesystem. Only /tmp is
@@ -38,14 +39,40 @@ const normalizePlaceBody = (body) => {
     indexedTips.forEach(([key]) => delete data[key]);
   }
   if (Object.keys(openingHours).length) data.openingHours = openingHours;
-  if (body.latitude !== undefined || body.longitude !== undefined) {
-    data.location = { latitude: Number(body.latitude), longitude: Number(body.longitude) };
+  const locationUrl = body.locationUrl?.trim();
+  if (locationUrl && !validateMapUrl(locationUrl)) {
+    throw new Error('Location link must be a valid Google Maps or OpenStreetMap HTTPS URL');
+  }
+  data.locationUrl = locationUrl || undefined;
+  const linkedCoordinates = locationUrl ? extractCoordinates(locationUrl) : null;
+  if (body.latitude !== undefined || body.longitude !== undefined || linkedCoordinates) {
+    const latitude = linkedCoordinates?.latitude ?? Number(body.latitude);
+    const longitude = linkedCoordinates?.longitude ?? Number(body.longitude);
+    if (!isValidCoordinate(latitude, longitude)) {
+      throw new Error('Latitude must be between -90 and 90 and longitude between -180 and 180');
+    }
+    data.location = { latitude, longitude };
     delete data.latitude; delete data.longitude;
   }
-  if (body.distanceFromHome !== undefined) data.distanceFromHome = Number(body.distanceFromHome);
-  if (body.estimatedVisitDuration !== undefined) data.estimatedVisitDuration = Number(body.estimatedVisitDuration);
+  if (body.distanceFromHome !== undefined) {
+    const distance = Number(body.distanceFromHome);
+    if (!Number.isFinite(distance) || distance < 0 || distance > 25) throw new Error('Distance must be between 0 and 25 km');
+    data.distanceFromHome = distance;
+  }
+  if (body.estimatedVisitDuration !== undefined) {
+    const duration = Number(body.estimatedVisitDuration);
+    if (!Number.isInteger(duration) || duration < 1 || duration > 1440) throw new Error('Visit duration must be between 1 and 1440 minutes');
+    data.estimatedVisitDuration = duration;
+  }
   if (body.travelTips && !Array.isArray(body.travelTips)) data.travelTips = [body.travelTips];
   return data;
+};
+
+const sendWriteError = (res, error) => {
+  const validationError = error.name === 'ValidationError' || /^(Location|Latitude|Distance|Visit duration)/.test(error.message);
+  return res.status(validationError ? 400 : 500).json({
+    message: validationError ? error.message : 'Server error'
+  });
 };
 
 const upload = multer({ 
@@ -126,7 +153,7 @@ router.post('/', adminAuth, upload.array('images', 5), async (req, res) => {
     await place.save();
     res.status(201).json(place);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    sendWriteError(res, error);
   }
 });
 
@@ -151,7 +178,7 @@ router.put('/:id', adminAuth, upload.array('images', 5), async (req, res) => {
     
     res.json(place);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    sendWriteError(res, error);
   }
 });
 

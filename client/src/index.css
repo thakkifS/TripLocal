@@ -36,3 +36,48 @@
   .eyebrow { @apply text-xs font-bold uppercase tracking-[0.22em] text-primary-600; }
   .image-placeholder { @apply bg-gradient-to-br from-primary-100 via-[#e8efe4] to-secondary-100 relative overflow-hidden; }
 }
+
+.print-only { display: none; }
+
+@media print {
+  @page { size: A4; margin: 14mm; }
+
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only { display: block; }
+
+  body,
+  .trip-plan-print {
+    background: white !important;
+    color: black;
+  }
+
+  .trip-plan-print {
+    min-height: auto;
+    padding: 0 !important;
+  }
+
+  .trip-plan-print > div {
+    max-width: none;
+    padding: 0 !important;
+  }
+
+  .print-section {
+    box-shadow: none !important;
+    border: 1px solid #d1d5db;
+  }
+
+  .print-item,
+  .print-summary {
+    break-inside: avoid;
+  }
+
+  .trip-plan-print a {
+    color: inherit;
+    text-decoration: none;
+  }
+}

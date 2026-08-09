@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Clock, Trash2, Coffee, ArrowDown, Save, XCircle } from 'lucide-react';
+import { MapPin, Clock, Trash2, Coffee, ArrowDown, Save, XCircle, Printer } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../config';
 
@@ -160,11 +160,12 @@ const DayPlanner = () => {
   const itinerary = generateItinerary();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="trip-plan-print min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">My Day Trip</h1>
           <p className="text-gray-600">Plan your perfect one-day local adventure</p>
+          <p className="print-only text-gray-600">Printed from TripLocal</p>
         </div>
 
         {!dayPlan || !dayPlan.places || dayPlan.places.length === 0 ? (
@@ -181,14 +182,14 @@ const DayPlanner = () => {
         ) : (
           <>
             {/* Itinerary */}
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
+            <div className="print-section bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
               <div className="bg-gradient-to-r from-primary-600 to-secondary-600 p-6">
                 <h2 className="text-2xl font-bold text-white">MY ONE-DAY PLAN</h2>
               </div>
 
               <div className="p-6">
                 {itinerary.map((item, index) => (
-                  <div key={index} className="relative">
+                  <div key={index} className="print-item relative">
                     {item.isEnd ? (
                       <div className="text-center py-4">
                         <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-2">
@@ -219,7 +220,8 @@ const DayPlanner = () => {
                           <div className="bg-gradient-to-r from-primary-50 to-orange-50 border-2 border-primary-200 rounded-xl p-4 relative">
                             <button
                               onClick={() => removeFromPlan(item.place._id)}
-                              className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1"
+                              className="no-print absolute top-2 right-2 text-red-500 hover:text-red-700 p-1"
+                              aria-label={`Remove ${item.place.name} from plan`}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -252,7 +254,7 @@ const DayPlanner = () => {
             </div>
 
             {/* Summary */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div className="print-section print-summary bg-white rounded-2xl shadow-lg p-6 mb-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Trip Summary</h3>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-primary-50 rounded-xl">
@@ -277,7 +279,7 @@ const DayPlanner = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex space-x-4">
+            <div className="no-print grid gap-4 sm:grid-cols-3">
               <button
                 onClick={clearPlan}
                 className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-3 px-6 rounded-xl transition-colors flex items-center justify-center"
@@ -288,6 +290,14 @@ const DayPlanner = () => {
               <button disabled className="flex-1 btn-primary flex items-center justify-center disabled:opacity-80 disabled:cursor-default">
                 <Save className="w-5 h-5 mr-2" />
                 Plan Saved Automatically
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="btn-outline flex items-center justify-center"
+              >
+                <Printer className="w-5 h-5 mr-2" />
+                Print Plan
               </button>
             </div>
           </>

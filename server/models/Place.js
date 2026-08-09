@@ -34,14 +34,27 @@ const placeSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  locationUrl: {
+    type: String,
+    trim: true,
+    maxlength: 2000,
+    validate: {
+      validator: (value) => !value || /^https:\/\/(?:www\.)?(?:google\.com|maps\.google\.com|maps\.app\.goo\.gl|goo\.gl|openstreetmap\.org)(?:\/|$)/i.test(value),
+      message: 'Location link must be a valid Google Maps or OpenStreetMap HTTPS URL'
+    }
+  },
   location: {
     latitude: {
       type: Number,
-      required: true
+      required: true,
+      min: -90,
+      max: 90
     },
     longitude: {
       type: Number,
-      required: true
+      required: true,
+      min: -180,
+      max: 180
     }
   },
   distanceFromHome: {
@@ -52,7 +65,9 @@ const placeSchema = new mongoose.Schema({
   },
   estimatedVisitDuration: {
     type: Number,
-    default: 60
+    default: 60,
+    min: 1,
+    max: 1440
   },
   createdAt: {
     type: Date,

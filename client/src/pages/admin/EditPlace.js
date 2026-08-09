@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowLeft, Upload, Trash2 } from 'lucide-react';
 import { API_URL } from '../../config';
+import { extractCoordinates, validateMapUrl } from '../../utils/location';
 
 const EditPlace = () => {
   const { id } = useParams();
@@ -14,6 +15,7 @@ const EditPlace = () => {
     description: '',
     category: 'Nature',
     address: '',
+    locationUrl: '',
     latitude: '',
     longitude: '',
     distanceFromHome: '',
@@ -47,6 +49,7 @@ const EditPlace = () => {
         description: place.description,
         category: place.category,
         address: place.address,
+        locationUrl: place.locationUrl || '',
         latitude: place.location.latitude,
         longitude: place.location.longitude,
         distanceFromHome: place.distanceFromHome,
@@ -92,12 +95,30 @@ const EditPlace = () => {
     setImages(e.target.files);
   };
 
+  const calculateCoordinates = () => {
+    if (!validateMapUrl(formData.locationUrl)) {
+      alert('Enter a valid HTTPS Google Maps or OpenStreetMap link.');
+      return false;
+    }
+    const coordinates = extractCoordinates(formData.locationUrl);
+    if (!coordinates) {
+      alert('This link does not contain coordinates. In Google Maps, copy the full browser URL containing @latitude,longitude.');
+      return false;
+    }
+    setFormData((current) => ({ ...current, ...coordinates }));
+    return true;
+  };
+
   const removeExistingImage = (index) => {
     setExistingImages(existingImages.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.locationUrl && !validateMapUrl(formData.locationUrl)) {
+      alert('Enter a valid HTTPS Google Maps or OpenStreetMap link.');
+      return;
+    }
     setSaving(true);
 
     try {
@@ -134,7 +155,7 @@ const EditPlace = () => {
       navigate('/admin/places');
     } catch (error) {
       console.error('Error updating place:', error);
-      alert('Failed to update place. Please try again.');
+      alert(error.response?.data?.message || 'Failed to update place. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -219,6 +240,27 @@ const EditPlace = () => {
           {/* Location */}
           <div className="mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Location</h2>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Google Maps or OpenStreetMap Link
+              </label>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <input
+                  type="url"
+                  name="locationUrl"
+                  value={formData.locationUrl}
+                  onChange={handleChange}
+                  maxLength={2000}
+                  className="input-field"
+                  placeholder="https://www.google.com/maps/place/.../@7.29,81.67,15z"
+                />
+                <button type="button" onClick={calculateCoordinates} className="btn-outline whitespace-nowrap">
+                  Calculate coordinates
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-gray-500">Use a full map URL. Coordinates below are filled automatically when the link contains them.</p>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
@@ -232,6 +274,8 @@ const EditPlace = () => {
                   value={formData.latitude}
                   onChange={handleChange}
                   required
+                  min="-90"
+                  max="90"
                   className="input-field"
                 />
               </div>
@@ -247,6 +291,8 @@ const EditPlace = () => {
                   value={formData.longitude}
                   onChange={handleChange}
                   required
+                  min="-180"
+                  max="180"
                   className="input-field"
                 />
               </div>
@@ -299,6 +345,9 @@ const EditPlace = () => {
                   value={formData.estimatedVisitDuration}
                   onChange={handleChange}
                   className="input-field"
+                  min="1"
+                  max="1440"
+                  required
                 />
               </div>
             </div>
