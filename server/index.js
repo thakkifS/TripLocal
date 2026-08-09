@@ -15,9 +15,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/triplocal')
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+const mongoUri = process.env.MONGODB_URI || (process.env.VERCEL ? null : 'mongodb://localhost:27017/triplocal');
+if (mongoUri) {
+  mongoose.connect(mongoUri)
+    .then(() => console.log('MongoDB connected successfully'))
+    .catch((err) => console.error('MongoDB connection error:', err));
+} else {
+  console.error('MONGODB_URI is not configured');
+}
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -26,7 +31,11 @@ app.use('/api/dayplan', require('./routes/dayplan'));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'TripLocal server is running' });
+  const databaseConnected = mongoose.connection.readyState === 1;
+  res.status(databaseConnected ? 200 : 503).json({
+    status: databaseConnected ? 'ok' : 'unavailable',
+    database: databaseConnected ? 'connected' : 'disconnected'
+  });
 });
 
 if (require.main === module) {

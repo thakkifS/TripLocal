@@ -138,6 +138,11 @@ The project includes 10 sample places within 25km:
 9. Yala East National Park - Adventure - 21.2 km
 10. Thirukkovil Temple - Cultural - 23.7 km
 
-## Default Admin Account
+## Administrator Account
 
-To create an admin account, register with role "admin" selected during registration.
+Public registration creates tourist accounts only. To create or update an administrator,
+set `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `MONGODB_URI`, then run:
+
+```bash
+node server/provisionAdmin.js
+```

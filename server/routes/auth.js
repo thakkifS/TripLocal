@@ -4,6 +4,18 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { auth } = require('../middleware/auth');
 
+const createToken = (userId) => {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+};
+
+router.use((req, res, next) => {
+  if (!process.env.JWT_SECRET) {
+    console.error('JWT_SECRET is not configured');
+    return res.status(503).json({ message: 'Authentication service is not configured' });
+  }
+  next();
+});
+
 // Register
 router.post('/register', async (req, res) => {
   try {
@@ -18,7 +30,7 @@ router.post('/register', async (req, res) => {
     const user = new User({ name, email, password, role: 'tourist' });
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = createToken(user._id);
 
     res.status(201).json({
       token,
@@ -49,7 +61,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = createToken(user._id);
 
     res.json({
       token,

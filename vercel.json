@@ -23,8 +23,12 @@
       "dest": "/server/index.js"
     },
     {
-      "src": "/(.*)",
+      "src": "/((?:static|images)/.*|favicon\\.svg|asset-manifest\\.json|manifest\\.json|robots\\.txt)",
       "dest": "/client/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/index.html"
     }
   ]
 }

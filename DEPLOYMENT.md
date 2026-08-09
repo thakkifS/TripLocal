@@ -56,8 +56,9 @@ Alternatively, use the Admin Dashboard to add places manually.
 ### 5. Test Your Deployment
 
 1. Visit your deployed URL
-2. Register a new account (select "admin" role for admin access)
-3. Test all features:
+2. Register a new tourist account and test sign-in
+3. Provision an administrator with `server/provisionAdmin.js` (public registration never creates administrators)
+4. Test all features:
    - Browse places
    - Search and filter
    - View place details
@@ -78,6 +79,11 @@ Alternatively, use the Admin Dashboard to add places manually.
 **API Errors:**
 - Verify REACT_APP_API_URL is set to `/api` for production
 - Check that JWT_SECRET is set
+- Open `/api/health` on the deployed domain and inspect the Vercel Function logs if it is not healthy
+
+**Admin access:**
+- Public sign-up deliberately creates tourist accounts only
+- Set `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` locally alongside the production `MONGODB_URI`, then run `node server/provisionAdmin.js` once
 
 **Image Upload Issues:**
 - Vercel serverless functions have size limits

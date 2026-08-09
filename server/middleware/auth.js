@@ -9,6 +9,11 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ message: 'No authentication token, access denied' });
     }
 
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is not configured');
+      return res.status(503).json({ message: 'Authentication service is not configured' });
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select('-password');
     
@@ -24,17 +29,13 @@ const auth = async (req, res, next) => {
 };
 
 const adminAuth = async (req, res, next) => {
-  try {
-    await auth(req, res, () => {});
-    
-    if (req.user.role !== 'admin') {
+  auth(req, res, () => {
+    if (req.user?.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied. Admin only.' });
     }
-    
+
     next();
-  } catch (error) {
-    res.status(401).json({ message: 'Authentication failed' });
-  }
+  });
 };
 
 module.exports = { auth, adminAuth };

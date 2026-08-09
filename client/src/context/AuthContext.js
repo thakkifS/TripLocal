@@ -4,6 +4,12 @@ import { API_URL } from '../config';
 
 const AuthContext = createContext(null);
 
+const getAuthError = (error, fallback) => {
+  if (error.response?.data?.message) return error.response.data.message;
+  if (error.request) return 'Cannot reach the TripLocal server. Please try again shortly.';
+  return fallback;
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -44,7 +50,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return { 
         success: false, 
-        error: error.response?.data?.message || 'Login failed' 
+        error: getAuthError(error, 'Login failed')
       };
     }
   };
@@ -65,7 +71,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return { 
         success: false, 
-        error: error.response?.data?.message || 'Registration failed' 
+        error: getAuthError(error, 'Registration failed')
       };
     }
   };
